@@ -349,7 +349,7 @@ class BERTScorer:
         return self.__repr__()
 
 
-def return_token_scores(self, candidate, reference, fname=""):
+  def return_token_scores(self, candidate, reference, fname=""):
         """
         Args:
             - :param: `candidate` (str): a candidate sentence
