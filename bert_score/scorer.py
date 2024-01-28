@@ -347,3 +347,63 @@ class BERTScorer:
 
     def __str__(self):
         return self.__repr__()
+
+
+def return_token_scores(self, candidate, reference, fname=""):
+        """
+        Args:
+            - :param: `candidate` (str): a candidate sentence
+            - :param: `reference` (str): a reference sentence
+            - :param: `fname` (str): path to save the output plot
+        """
+
+        assert isinstance(candidate, str)
+        assert isinstance(reference, str)
+
+        idf_dict = defaultdict(lambda: 1.0)
+        idf_dict[self._tokenizer.sep_token_id] = 0
+        idf_dict[self._tokenizer.cls_token_id] = 0
+
+        hyp_embedding, masks, padded_idf = get_bert_embedding(
+            [candidate],
+            self._model,
+            self._tokenizer,
+            idf_dict,
+            device=self.device,
+            all_layers=False,
+        )
+        ref_embedding, masks, padded_idf = get_bert_embedding(
+            [reference],
+            self._model,
+            self._tokenizer,
+            idf_dict,
+            device=self.device,
+            all_layers=False,
+        )
+        ref_embedding.div_(torch.norm(ref_embedding, dim=-1).unsqueeze(-1))
+        hyp_embedding.div_(torch.norm(hyp_embedding, dim=-1).unsqueeze(-1))
+        sim = torch.bmm(hyp_embedding, ref_embedding.transpose(1, 2))
+        sim = sim.squeeze(0).cpu()
+
+        r_tokens = [
+            self._tokenizer.decode([i]) for i in sent_encode(self._tokenizer, reference)
+        ][1:-1]
+        h_tokens = [
+            self._tokenizer.decode([i]) for i in sent_encode(self._tokenizer, candidate)
+        ][1:-1]
+        sim = sim[1:-1, 1:-1]
+
+        if self.rescale_with_baseline:
+            sim = (sim - self.baseline_vals[2].item()) / (
+                1 - self.baseline_vals[2].item()
+            )
+
+        token_scores=[]
+        for i in range(len(h_tokens)):
+            max=0
+            for j in range(len(r_tokens)):
+                if sim[i, j].item() > max:
+                    max = sim[i,j]
+            token_scores.append((h_tokens[i],max))
+          
+        return token_scores
