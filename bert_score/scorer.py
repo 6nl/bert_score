@@ -404,9 +404,9 @@ class BERTScorer:
             max=0
             match=0
             for j in range(len(r_tokens)):
-                if j_token[0] == '.' and h_token[0] != '.': 
+                if r_tokens[j][0] == '.' and h_tokens[i][0] != '.': 
                     continue  # can't use word-afinity with full stop, unless it's a full stop!
-                if j_token[0] == ',' and h_token[0] != ',': 
+                if r_tokens[j][0] == ',' and h_tokens[i][0] != ',': 
                     continue  # can't use word-afinity with a comma, unless it's a comma!
                 if sim[i, j].item() > max:
                     max = sim[i,j]
