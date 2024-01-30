@@ -349,7 +349,7 @@ class BERTScorer:
         return self.__repr__()
 
 
-    def return_token_scores(self, candidate, reference, fname=""):
+    def return_token_scores(self, candidate, reference, fname="", print_debug=False):
         """
         Args:
             - :param: `candidate` (str): a candidate sentence
@@ -399,11 +399,18 @@ class BERTScorer:
             )
 
         token_scores=[]
+        token_matches=[]
         for i in range(len(h_tokens)):
             max=0
+            match=0
             for j in range(len(r_tokens)):
                 if sim[i, j].item() > max:
                     max = sim[i,j]
+                    match=r_tokens[j]
             token_scores.append((h_tokens[i],max))
-          
+            token_matches.append((h_tokens[i], match, max))
+
+        if print_debug:
+            print(token_matches)
+        
         return token_scores
